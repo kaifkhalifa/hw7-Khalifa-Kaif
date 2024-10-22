@@ -17,7 +17,8 @@
 ;; where
 ;; right: represents the list of characters to the right of the cursor
 ;; left: represents the list of characters to the left of the cursor
-(struct TextBox [right left])
+(struct TextBox [right left] #:transparent) 
+
 
 ;; create-TextBox : list? list? -> TextBox?
 ;; Takes two lists (right and left) and creates a TextBox instance.
@@ -56,9 +57,74 @@
                (/ TEXTBOX-HEIGHT 2)
                (rectangle TEXTBOX-WIDTH TEXTBOX-HEIGHT "outline" "black")))
 
+;; key-handler : TextBox String -> TextBox
+;; Handles key inputs to modify the TextBox.
+(define (key-handler textbox key)
+  (cond
+    ;; Move the cursor to the left (pop from 'left' and push to 'right')
+    [(string=? key "left")
+     (if (empty? (TextBox-left textbox))
+         textbox
+         (TextBox (rest (TextBox-left textbox))
+                  (cons (first (TextBox-left textbox)) (TextBox-right textbox))))]
+    
+    ;; Move the cursor to the right (pop from 'right' and push to 'left')
+    [(string=? key "right")
+     (if (empty? (TextBox-right textbox))
+         textbox
+         (TextBox (cons (first (TextBox-right textbox)) (TextBox-left textbox))
+                  (rest (TextBox-right textbox))))]
+    
+    ;; Backspace (remove the last character from 'left')
+    [(string=? key "backspace")
+     (if (empty? (TextBox-left textbox))
+         textbox
+         (TextBox (rest (TextBox-left textbox)) (TextBox-right textbox)))]
+    
+    ;; Delete (remove the first character from 'right')
+    [(string=? key "delete")
+     (if (empty? (TextBox-right textbox))
+         textbox
+         (TextBox (TextBox-left textbox)
+                  (rest (TextBox-right textbox))))]
+    
+    ;; Insert any single character (into 'left', where the cursor is)
+    [(= (string-length key) 1)
+     (TextBox (cons (string-ref key 0) (TextBox-left textbox))
+              (TextBox-right textbox))]
+    
+    ;; Ignore all other keys
+    [else textbox]))
 
 
+;; Example TextBox: right '(#\W #\o #\r #\l #\d), left '(#\H #\e #\l #\l #\o)
+(define example-textbox (create-TextBox '(#\W #\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
 
+;; Test 1: Move cursor left
+;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+;; After moving left: left '(#\e #\l #\l #\o), right '(#\H #\W #\o #\r #\l #\d)
+(check-equal? 
+  (key-handler example-textbox "left")
+  (create-TextBox '(#\H #\W #\o #\r #\l #\d) '(#\e #\l #\l #\o)))
 
+;; Test 2: Backspace
+;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+;; After backspace: left '(#\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+(check-equal? 
+  (key-handler example-textbox "backspace")
+  (create-TextBox '(#\W #\o #\r #\l #\d) '(#\e #\l #\l #\o)))
 
+;; Test 3: Insert character 'X'
+;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+;; After inserting 'X': left '(#\X #\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+(check-equal? 
+  (key-handler example-textbox "X")
+  (create-TextBox '(#\W #\o #\r #\l #\d) '(#\X #\H #\e #\l #\l #\o)))
+
+;; Test 4: Delete character to the right
+;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+;; After delete: left '(#\H #\e #\l #\l #\o), right '(#\o #\r #\l #\d)
+(check-equal? 
+  (key-handler example-textbox "delete")
+  (create-TextBox '(#\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
 
