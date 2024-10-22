@@ -3,7 +3,8 @@
 (provide (all-defined-out))
 
 (require rackunit
-         2htdp/image)
+         2htdp/image
+         2htdp/universe)
 
 
 (define FONT-SIZE 32)
@@ -177,4 +178,10 @@
      textbox]))  ; Ignore all other keys
 
 
+;; main : -> TextBox
+;; Runs the interactive program with a TextBox.
+(define (main)
+  (big-bang (create-TextBox '() '())  ; Initial empty TextBox
+    (on-key key-handler)              ; Handle key inputs
+    (to-draw render)))                ; Render the TextBox
 
