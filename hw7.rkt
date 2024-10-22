@@ -35,7 +35,7 @@
 ;; render : TextBox -> Image
 ;; Takes an instance of TextBox, and renders the text and cursor into a box.
 (define (render textbox)
-  (let* ([left-str (list->string (TextBox-left textbox))]
+  (let* ([left-str (list->string (reverse (TextBox-left textbox)))]  ;; reverse the left list
          [right-str (list->string (TextBox-right textbox))]
          [left-text (text left-str FONT-SIZE FONT-COLOR)]
          [right-text (text right-str FONT-SIZE FONT-COLOR)]
@@ -44,8 +44,9 @@
     (place-image text-image (+ INITIAL-SPACE (/ (image-width text-image) 2)) (/ TEXTBOX-HEIGHT 2)
                  (rectangle TEXTBOX-WIDTH TEXTBOX-HEIGHT "outline" "black"))))
 
+
 ;; Example for render
-(define textbox-example (create-TextBox '(#\H #\e #\l #\l #\o) '(#\W #\o #\r #\l #\d)))
+(define textbox-example (create-TextBox '(#\H #\e #\l #\l #\o) '(#\d #\l #\r #\o #\W)))
 
 (check-equal? (render textbox-example)
               (place-image
@@ -57,6 +58,8 @@
                                       (image-width (text "Hello" FONT-SIZE FONT-COLOR))) 2))
                (/ TEXTBOX-HEIGHT 2)
                (rectangle TEXTBOX-WIDTH TEXTBOX-HEIGHT "outline" "black")))
+
+
 
 ;; remove-char : list -> list
 ;; Removes the first character from the given list.
@@ -149,6 +152,8 @@
         (TextBox-right tb) 
         (cons (string-ref char 0) (TextBox-left tb)))))
 
+
+
 ;; Example
 (define textbox5 (create-TextBox '(#\W #\o #\r #\l #\d) '(#\o #\l #\l #\e #\H)))
 (check-equal? 
@@ -184,4 +189,3 @@
   (big-bang (create-TextBox '() '())  ; Initial empty TextBox
     (on-key key-handler)              ; Handle key inputs
     (to-draw render)))                ; Render the TextBox
-
