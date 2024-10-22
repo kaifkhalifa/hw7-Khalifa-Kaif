@@ -134,14 +134,16 @@
 ;; textbox-delete : TextBox -> TextBox
 ;; Removes the character to the right of the cursor.
 (define (textbox-delete tb)
-  (create-TextBox (remove-char (TextBox-right tb)) (TextBox-left tb)))
+  (if (empty? (TextBox-right tb))
+      tb
+      (create-TextBox (rest (TextBox-right tb)) (TextBox-left tb))))
 
 ;; Example
-(define empty-right-textbox2 (create-TextBox '() '(#\o #\l #\l #\e #\H)))
-
+(define example-textbox (create-TextBox '(#\W #\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
 (check-equal? 
-  (textbox-delete empty-right-textbox2)
-  empty-right-textbox2)
+  (textbox-delete example-textbox)
+  (create-TextBox '(#\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
+
 
 ;; textbox-insert : TextBox String -> TextBox
 ;; Inserts a single character at the cursor and moves the cursor right.
@@ -175,7 +177,7 @@
     
     [(string=? key "delete")
      (textbox-delete textbox)]
-    
+  
     [(= (string-length key) 1)
      (textbox-insert textbox key)]
     
