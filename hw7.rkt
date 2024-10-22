@@ -65,65 +65,63 @@
     [(string=? key "left")
      (if (empty? (TextBox-left textbox))
          textbox
-         (TextBox (rest (TextBox-left textbox))
-                  (cons (first (TextBox-left textbox)) (TextBox-right textbox))))]
-    
+         (TextBox 
+           (cons (first (TextBox-left textbox)) (TextBox-right textbox)) ; New 'right'
+           (rest (TextBox-left textbox)) ))] ; New 'left'
+
     ;; Move the cursor to the right (pop from 'right' and push to 'left')
     [(string=? key "right")
      (if (empty? (TextBox-right textbox))
          textbox
-         (TextBox (cons (first (TextBox-right textbox)) (TextBox-left textbox))
-                  (rest (TextBox-right textbox))))]
-    
-    ;; Backspace (remove the last character from 'left')
+         (TextBox 
+           (rest (TextBox-right textbox)) ; New 'right'
+           (cons (first (TextBox-right textbox)) (TextBox-left textbox)) ))] ; New 'left'
+
+    ;; Backspace (remove the first character from 'left')
     [(string=? key "backspace")
      (if (empty? (TextBox-left textbox))
          textbox
-         (TextBox (rest (TextBox-left textbox)) (TextBox-right textbox)))]
-    
+         (TextBox 
+           (TextBox-right textbox) ; 'right' remains unchanged
+           (rest (TextBox-left textbox)) ))] ; New 'left'
+
     ;; Delete (remove the first character from 'right')
     [(string=? key "delete")
      (if (empty? (TextBox-right textbox))
          textbox
-         (TextBox (TextBox-left textbox)
-                  (rest (TextBox-right textbox))))]
-    
+         (TextBox 
+           (rest (TextBox-right textbox)) ; New 'right'
+           (TextBox-left textbox) ))] ; 'left' remains unchanged
+
     ;; Insert any single character (into 'left', where the cursor is)
     [(= (string-length key) 1)
-     (TextBox (cons (string-ref key 0) (TextBox-left textbox))
-              (TextBox-right textbox))]
-    
+     (TextBox 
+       (TextBox-right textbox) 
+       (cons (string-ref key 0) (TextBox-left textbox)) ) ]
+
     ;; Ignore all other keys
     [else textbox]))
 
 
-;; Example TextBox: right '(#\W #\o #\r #\l #\d), left '(#\H #\e #\l #\l #\o)
+;; Example for keyhandler
 (define example-textbox (create-TextBox '(#\W #\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
 
-;; Test 1: Move cursor left
-;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
-;; After moving left: left '(#\e #\l #\l #\o), right '(#\H #\W #\o #\r #\l #\d)
+;;Move cursor left
 (check-equal? 
   (key-handler example-textbox "left")
   (create-TextBox '(#\H #\W #\o #\r #\l #\d) '(#\e #\l #\l #\o)))
 
-;; Test 2: Backspace
-;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
-;; After backspace: left '(#\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+;;Backspace
 (check-equal? 
   (key-handler example-textbox "backspace")
   (create-TextBox '(#\W #\o #\r #\l #\d) '(#\e #\l #\l #\o)))
 
-;; Test 3: Insert character 'X'
-;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
-;; After inserting 'X': left '(#\X #\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
+;;Insert character 'X'
 (check-equal? 
   (key-handler example-textbox "X")
   (create-TextBox '(#\W #\o #\r #\l #\d) '(#\X #\H #\e #\l #\l #\o)))
 
-;; Test 4: Delete character to the right
-;; Initial TextBox: left '(#\H #\e #\l #\l #\o), right '(#\W #\o #\r #\l #\d)
-;; After delete: left '(#\H #\e #\l #\l #\o), right '(#\o #\r #\l #\d)
+;;Delete character to the right
 (check-equal? 
   (key-handler example-textbox "delete")
   (create-TextBox '(#\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
