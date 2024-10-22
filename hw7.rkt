@@ -57,72 +57,124 @@
                (/ TEXTBOX-HEIGHT 2)
                (rectangle TEXTBOX-WIDTH TEXTBOX-HEIGHT "outline" "black")))
 
+;; remove-char : list -> list
+;; Removes the first character from the given list.
+(define (remove-char lst)
+  (if (empty? lst)
+      lst
+      (rest lst)))
+
+;; Example
+(check-equal? 
+  (remove-char '(#\a #\b #\c))
+  '(#\b #\c))
+
+;; shift-char : list * list -> list * list
+;; Moves the first character from 'from-list' to the front of 'to-list'.
+(define (shift-char from-list to-list)
+  (if (empty? from-list)
+      (values from-list to-list)
+      (values (rest from-list) (cons (first from-list) to-list))))
+
+;; Example
+(define-values (new-from new-to)
+  (shift-char '(#\a #\b #\c) '(#\x #\y)))
+(check-equal? new-from '(#\b #\c))
+(check-equal? new-to '(#\a #\x #\y))
+
+;; textbox-left : TextBox -> TextBox
+;; Moves the cursor one character to the left.
+(define (textbox-left tb)
+  (define-values (new-left new-right)
+    (shift-char (TextBox-left tb) (TextBox-right tb)))
+  (if (equal? (TextBox-left tb) new-left)
+      tb
+      (create-TextBox new-right new-left)))
+
+;; Example
+(define empty-left-textbox (create-TextBox '(#\W #\o #\r #\l #\d) '()))
+
+(check-equal? 
+  (textbox-left empty-left-textbox)
+  empty-left-textbox)
+
+;; textbox-right : TextBox -> TextBox
+;; Moves the cursor one character to the right.
+(define (textbox-right tb)
+  (define-values (new-right new-left)
+    (shift-char (TextBox-right tb) (TextBox-left tb)))
+  (if (equal? (TextBox-right tb) new-right)
+      tb  ; No change if 'right' was empty
+      (create-TextBox new-right new-left)))
+
+;; Example
+(define empty-right-textbox (create-TextBox '() '(#\o #\l #\l #\e #\H)))
+
+(check-equal? 
+  (textbox-right empty-right-textbox)
+  empty-right-textbox)
+
+;; textbox-backspace : TextBox -> TextBox
+;; Removes the character to the left of the cursor.
+(define (textbox-backspace tb)
+  (create-TextBox (TextBox-right tb) (remove-char (TextBox-left tb))))
+
+
+;; Example
+(define empty-left-textbox2 (create-TextBox '(#\W #\o #\r #\l #\d) '()))
+
+(check-equal? 
+  (textbox-backspace empty-left-textbox2)
+  empty-left-textbox2)
+
+;; textbox-delete : TextBox -> TextBox
+;; Removes the character to the right of the cursor.
+(define (textbox-delete tb)
+  (create-TextBox (remove-char (TextBox-right tb)) (TextBox-left tb)))
+
+;; Example
+(define empty-right-textbox2 (create-TextBox '() '(#\o #\l #\l #\e #\H)))
+
+(check-equal? 
+  (textbox-delete empty-right-textbox2)
+  empty-right-textbox2)
+
+;; textbox-insert : TextBox String -> TextBox
+;; Inserts a single character at the cursor and moves the cursor right.
+(define (textbox-insert tb char)
+  (if (not (= (string-length char) 1))
+      tb  ; Ignore if not a single character
+      (create-TextBox 
+        (TextBox-right tb) 
+        (cons (string-ref char 0) (TextBox-left tb)))))
+
+;; Example
+(define textbox5 (create-TextBox '(#\W #\o #\r #\l #\d) '(#\o #\l #\l #\e #\H)))
+(check-equal? 
+  (textbox-insert textbox5 "")
+  textbox5)
+
 ;; key-handler : TextBox String -> TextBox
 ;; Handles key inputs to modify the TextBox.
 (define (key-handler textbox key)
   (cond
-    ;; Move the cursor to the left (pop from 'left' and push to 'right')
     [(string=? key "left")
-     (if (empty? (TextBox-left textbox))
-         textbox
-         (TextBox 
-           (cons (first (TextBox-left textbox)) (TextBox-right textbox)) ; New 'right'
-           (rest (TextBox-left textbox)) ))] ; New 'left'
-
-    ;; Move the cursor to the right (pop from 'right' and push to 'left')
+     (textbox-left textbox)]
+    
     [(string=? key "right")
-     (if (empty? (TextBox-right textbox))
-         textbox
-         (TextBox 
-           (rest (TextBox-right textbox)) ; New 'right'
-           (cons (first (TextBox-right textbox)) (TextBox-left textbox)) ))] ; New 'left'
-
-    ;; Backspace (remove the first character from 'left')
+     (textbox-right textbox)]
+    
     [(string=? key "backspace")
-     (if (empty? (TextBox-left textbox))
-         textbox
-         (TextBox 
-           (TextBox-right textbox) ; 'right' remains unchanged
-           (rest (TextBox-left textbox)) ))] ; New 'left'
-
-    ;; Delete (remove the first character from 'right')
+     (textbox-backspace textbox)]
+    
     [(string=? key "delete")
-     (if (empty? (TextBox-right textbox))
-         textbox
-         (TextBox 
-           (rest (TextBox-right textbox)) ; New 'right'
-           (TextBox-left textbox) ))] ; 'left' remains unchanged
-
-    ;; Insert any single character (into 'left', where the cursor is)
+     (textbox-delete textbox)]
+    
     [(= (string-length key) 1)
-     (TextBox 
-       (TextBox-right textbox) 
-       (cons (string-ref key 0) (TextBox-left textbox)) ) ]
-
-    ;; Ignore all other keys
-    [else textbox]))
+     (textbox-insert textbox key)]
+    
+    [else
+     textbox]))  ; Ignore all other keys
 
 
-;; Example for keyhandler
-(define example-textbox (create-TextBox '(#\W #\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
-
-;;Move cursor left
-(check-equal? 
-  (key-handler example-textbox "left")
-  (create-TextBox '(#\H #\W #\o #\r #\l #\d) '(#\e #\l #\l #\o)))
-
-;;Backspace
-(check-equal? 
-  (key-handler example-textbox "backspace")
-  (create-TextBox '(#\W #\o #\r #\l #\d) '(#\e #\l #\l #\o)))
-
-;;Insert character 'X'
-(check-equal? 
-  (key-handler example-textbox "X")
-  (create-TextBox '(#\W #\o #\r #\l #\d) '(#\X #\H #\e #\l #\l #\o)))
-
-;;Delete character to the right
-(check-equal? 
-  (key-handler example-textbox "delete")
-  (create-TextBox '(#\o #\r #\l #\d) '(#\H #\e #\l #\l #\o)))
 
