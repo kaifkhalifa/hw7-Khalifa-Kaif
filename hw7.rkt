@@ -52,16 +52,6 @@
 (check-equal? (text-center-x (create-text-img (create-TextBox "abc" "def")))
               (+ INITIAL-SPACE (/ (image-width (create-text-img (create-TextBox "abc" "def"))) 2)))
 
-;; render: WorldState -> image
-;; Renders the text and cursor in a textbox
-(define/contract (render tb)
-  (-> TextBox? image?)
-  (place-image (create-text-img tb) (text-center-x (create-text-img tb)) (/ TEXTBOX-HEIGHT 2) TEXTBOX))
-;; example:
-(check-equal? (render (create-TextBox "abc" "def"))
-              (place-image (create-text-img (create-TextBox "abc" "def"))
-                           (text-center-x (create-text-img (create-TextBox "abc" "def")))
-                           (/ TEXTBOX-HEIGHT 2) TEXTBOX))
 
 ;; last-index: string -> integer
 ;; helper function to get the last index of a string 
@@ -152,7 +142,6 @@
 (check-equal? (shift-char (create-TextBox "abc" "def")) (create-TextBox "abcd" "ef"))
 
 
-
 ;; key-handler : TextBox String -> TextBox
 ;; Handles key inputs to modify the TextBox.
 ;; - "left" moves the cursor one character left.
@@ -216,6 +205,18 @@
 ;; Insert character "!"
 (check-equal? (key-handler textbox-example "!")
               (textbox-insert textbox-example "!"))
+
+
+;; render: WorldState -> image
+;; Renders the text and cursor in a textbox
+(define/contract (render tb)
+  (-> TextBox? image?)
+  (place-image (create-text-img tb) (text-center-x (create-text-img tb)) (/ TEXTBOX-HEIGHT 2) TEXTBOX))
+;; example:
+(check-equal? (render (create-TextBox "abc" "def"))
+              (place-image (create-text-img (create-TextBox "abc" "def"))
+                           (text-center-x (create-text-img (create-TextBox "abc" "def")))
+                           (/ TEXTBOX-HEIGHT 2) TEXTBOX))
 
 ;; main : -> void
 ;; Starts the interactive text editor with a blank TextBox.
