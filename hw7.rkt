@@ -156,9 +156,15 @@
 ;; - "backspace" removes the character before the cursor.
 ;; - "delete" removes the character after the cursor.
 ;; - All other single characters insert the character at the cursor.
+;; - "tab" and "return" should be ignored.
 (define/contract (key-handler textbox key)
   (-> TextBox? string? TextBox?)
   (cond
+    ;; Ignore the "return" and "tab" keys
+    [(or (string=? key "\r")   ;; "return" key
+         (string=? key "\t"))  ;; "tab" key
+     textbox]
+
     ;; Move the cursor left (pop from pre to post)
     [(string=? key "left")
      (textbox-left textbox)]
@@ -172,7 +178,7 @@
      (textbox-backspace textbox)]
     
     ;; Delete (remove character after the cursor)
-    [(string=? key "\b")
+    [(string=? key "\u007F")
      (textbox-delete textbox)]
     
     ;; Insert any other single character
@@ -181,6 +187,8 @@
     
     ;; Ignore all other keys
     [else textbox]))
+
+
 
 
 ;; Example key-handler tests
@@ -199,7 +207,7 @@
               (textbox-backspace textbox-example))
 
 ;; Delete
-(check-equal? (key-handler textbox-example "delete")
+(check-equal? (key-handler textbox-example "\u007F")
               (textbox-delete textbox-example))
 
 ;; Insert character "!"
