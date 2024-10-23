@@ -70,14 +70,14 @@
               (+ INITIAL-SPACE (/ (image-width (create-text-img (create-TextBox "abc" "def"))) 2)))
 
 
-;; textbox-delete: TextBox -> TextBox
 ;; Deletes the character immediately after the cursor.
 (define/contract (textbox-delete tb)
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
-  (create-TextBox pre (substring post (first-index post))))
+  (create-TextBox pre (if (empty? post) "" (substring post (first-index post)))))
 ;; Example:
 (check-equal? (textbox-delete (create-TextBox "abc" "def")) (create-TextBox "abc" "ef"))
+
 
 
 ;; textbox-backspace: TextBox -> TextBox
