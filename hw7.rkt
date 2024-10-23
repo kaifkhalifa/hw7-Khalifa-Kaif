@@ -16,106 +16,109 @@
 (define CURSOR (rectangle CURSOR-WIDTH FONT-SIZE "solid" "black"))
 (define TEXTBOX (rectangle TEXTBOX-WIDTH TEXTBOX-HEIGHT "outline" "black"))
 
-;; A TextBox is a (create-TextBox [right: list] [left: list])
-;; where
-;; pre: represents the list of characters before the cursor
-;; post: represents the list of characters after the cursor
+;; A TextBox represents text input, split into two parts:
+;; 'pre' contains characters before the cursor (left side).
+;; 'post' contains characters after the cursor (right side).
 (struct TextBox [pre post] #:transparent)
+
+;; create-TextBox: string? string? -> TextBox?
+;; Constructs a TextBox by combining the given 'pre' and 'post' strings.
 (define/contract (create-TextBox pre post)
   (-> string? string? TextBox?)
   (TextBox pre post))
 
 ;; string-to-text: string -> image
-;; takes a list and converts it to text to go in the textbox
+;; Converts a string into an image for rendering in the textbox.
 (define/contract (string-to-text str)
   (-> string? image?)
   (text str FONT-SIZE FONT-COLOR))
-;; example:
+;; Example:
 (check-equal? (string-to-text "kaif") (text "kaif" FONT-SIZE FONT-COLOR))
 
-;; create-text-img: TextBox -> TextBox
-;; creates the image that enpsulates the text and cursor which goes inside of the textbox
+;; create-text-img: TextBox -> image
+;; Creates an image representation of the TextBox, including the cursor and text.
 (define/contract (create-text-img tb)
   (-> TextBox? image?)
   (match-define (TextBox pre post) tb)
   (beside (string-to-text pre) CURSOR (string-to-text post)))
-;; example:
+;; Example:
 (check-equal? (create-text-img (create-TextBox "abc" "def"))
               (beside (string-to-text "abc") CURSOR (string-to-text "def")))
 
+;; last-index: string -> integer
+;; Returns the index of the last character in a string.
+(define (last-index str)
+  (max 0 (- (string-length str) 1)))
+;; Example:
+(check-equal? (last-index "") 0)
+
+;; first-index: string -> integer
+;; Returns 1 if the string is non-empty, otherwise returns 0 (to represent the first index).
+(define (first-index str)
+  (min 1 (string-length str)))
+;; Example:
+(check-equal? (first-index "") 0)
+
+
 ;; text-center-x: image -> number
-;; calculates the x-coordinate for the center of an image on the textbox
+;; Computes the x-coordinate for centering an image horizontally inside the textbox.
 (define/contract (text-center-x img)
   (-> image? number?)
   (+ INITIAL-SPACE (/ (image-width img) 2)))
-;; example:
+;; Example:
 (check-equal? (text-center-x (create-text-img (create-TextBox "abc" "def")))
               (+ INITIAL-SPACE (/ (image-width (create-text-img (create-TextBox "abc" "def"))) 2)))
 
 
-;; last-index: string -> integer
-;; helper function to get the last index of a string 
-(define (last-index str)
-  (max 0 (- (string-length str) 1)))
-;; Example for last-index
-(check-equal? (last-index "") 0)
-
-;; first-index: string -> string
-;; helper function to get the first index of a string 
-(define (first-index str)
-  (min 1 (string-length str)))
-;; Example for first-index
-(check-equal? (first-index "") 0)
-
-;; textbox-delete
-;; removes the character right after the cursor
+;; textbox-delete: TextBox -> TextBox
+;; Deletes the character immediately after the cursor.
 (define/contract (textbox-delete tb)
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox pre (substring post (first-index post))))
-;; example for textbox-delete
+;; Example:
 (check-equal? (textbox-delete (create-TextBox "abc" "def")) (create-TextBox "abc" "ef"))
 
 
 ;; textbox-backspace: TextBox -> TextBox
-;; removes the character right before the cursor
+;; Deletes the character immediately before the cursor.
 (define/contract (textbox-backspace tb)
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox (substring pre 0 (last-index pre)) post))
-;; example for textbox-backspace
+;; Example:
 (check-equal? (textbox-backspace (create-TextBox "abc" "def")) (create-TextBox "ab" "def"))
 
 
-;; textbox-insert: TextBox, string -> TextBox
-;; inserts string where the cursor is and moves the cursor to the right of that character
+;; textbox-insert: TextBox string -> TextBox
+;; Inserts a given string at the cursor's position and moves the cursor to the right of the inserted string.
 (define/contract (textbox-insert tb str)
   (-> TextBox? string? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox (string-append pre str) post))
-;; example
+;; Example:
 (check-equal? (textbox-insert (create-TextBox "ab" "cdef") "x") (create-TextBox "abx" "cdef"))
 
 
 ;; textbox-left: TextBox -> TextBox
-;; moves the cursor one character to the left
+;; Moves the cursor one character to the left by shifting the last character from 'pre' to 'post'.
 (define/contract (textbox-left tb)
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox (substring pre 0 (last-index pre)) 
                   (string-append (substring pre (last-index pre)) post)))
-;; example
+;; Example:
 (check-equal? (textbox-left (create-TextBox "abc" "def")) (create-TextBox "ab" "cdef"))
 
 
 ;; textbox-right: TextBox -> TextBox
-;; moves the cursor one character to the right
+;; Moves the cursor one character to the right by shifting the first character from 'post' to 'pre'.
 (define/contract (textbox-right tb)
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox (string-append pre (substring post 0 (first-index post)))
                   (substring post (first-index post))))
-;; example
+;; Example:
 (check-equal? (textbox-right (create-TextBox "abc" "def")) (create-TextBox "abcd" "ef"))
 
 
