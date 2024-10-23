@@ -67,11 +67,15 @@
 ;; helper function to get the last index of a string 
 (define (last-index str)
   (max 0 (- (string-length str) 1)))
+;; Example for last-index
+(check-equal? (last-index "") 0)
 
 ;; first-index: string -> string
 ;; helper function to get the first index of a string 
 (define (first-index str)
   (min 1 (string-length str)))
+;; Example for first-index
+(check-equal? (first-index "") 0)
 
 ;; textbox-delete
 ;; removes the character right after the cursor
