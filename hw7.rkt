@@ -31,7 +31,7 @@
   (-> string? image?)
   (text str FONT-SIZE FONT-COLOR))
 ;; example:
-(check-equal? (string-to-text "hi") (text "hi" FONT-SIZE FONT-COLOR))
+(check-equal? (string-to-text "kaif") (text "kaif" FONT-SIZE FONT-COLOR))
 
 ;; create-text-img: TextBox -> TextBox
 ;; creates the image that enpsulates the text and cursor which goes inside of the textbox
@@ -40,8 +40,8 @@
   (match-define (TextBox pre post) tb)
   (beside (string-to-text pre) CURSOR (string-to-text post)))
 ;; example:
-(check-equal? (create-text-img (create-TextBox "hel" "lo"))
-              (beside (string-to-text "hel") CURSOR (string-to-text "lo")))
+(check-equal? (create-text-img (create-TextBox "abc" "def"))
+              (beside (string-to-text "abc") CURSOR (string-to-text "def")))
 
 ;; text-center-x: image -> number
 ;; calculates the x-coordinate for the center of an image on the textbox
@@ -49,8 +49,8 @@
   (-> image? number?)
   (+ INITIAL-SPACE (/ (image-width img) 2)))
 ;; example:
-(check-equal? (text-center-x (create-text-img (create-TextBox "h" "i")))
-              (+ INITIAL-SPACE (/ (image-width (create-text-img (create-TextBox "h" "i"))) 2)))
+(check-equal? (text-center-x (create-text-img (create-TextBox "abc" "def")))
+              (+ INITIAL-SPACE (/ (image-width (create-text-img (create-TextBox "abc" "def"))) 2)))
 
 ;; render: WorldState -> image
 ;; Renders the text and cursor in a textbox
@@ -58,9 +58,9 @@
   (-> TextBox? image?)
   (place-image (create-text-img tb) (text-center-x (create-text-img tb)) (/ TEXTBOX-HEIGHT 2) TEXTBOX))
 ;; example:
-(check-equal? (render (create-TextBox "hel" "lo"))
-              (place-image (create-text-img (create-TextBox "hel" "lo"))
-                           (text-center-x (create-text-img (create-TextBox "hel" "lo")))
+(check-equal? (render (create-TextBox "abc" "def"))
+              (place-image (create-text-img (create-TextBox "abc" "def"))
+                           (text-center-x (create-text-img (create-TextBox "abc" "def")))
                            (/ TEXTBOX-HEIGHT 2) TEXTBOX))
 
 ;; last-index: string -> integer
@@ -79,8 +79,8 @@
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox pre (substring post (first-index post))))
-;; example
-(check-equal? (textbox-delete (create-TextBox "hel" "lo")) (create-TextBox "hel" "o"))
+;; example for textbox-delete
+(check-equal? (textbox-delete (create-TextBox "abc" "def")) (create-TextBox "abc" "ef"))
 
 
 ;; textbox-backspace: TextBox -> TextBox
@@ -89,8 +89,8 @@
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox (substring pre 0 (last-index pre)) post))
-;; example
-(check-equal? (textbox-backspace (create-TextBox "hel" "lo")) (create-TextBox "he" "lo"))
+;; example for textbox-backspace
+(check-equal? (textbox-backspace (create-TextBox "abc" "def")) (create-TextBox "ab" "def"))
 
 
 ;; textbox-insert: TextBox, string -> TextBox
@@ -100,7 +100,7 @@
   (match-define (TextBox pre post) tb)
   (create-TextBox (string-append pre str) post))
 ;; example
-(check-equal? (textbox-insert (create-TextBox "h" "llo") "e") (create-TextBox "he" "llo"))
+(check-equal? (textbox-insert (create-TextBox "ab" "cdef") "x") (create-TextBox "abx" "cdef"))
 
 
 ;; textbox-left: TextBox -> TextBox
@@ -109,9 +109,9 @@
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox (substring pre 0 (last-index pre)) 
-                      (string-append (substring pre (last-index pre)) post)))
+                  (string-append (substring pre (last-index pre)) post)))
 ;; example
-(check-equal? (textbox-left (create-TextBox "hel" "lo")) (create-TextBox "he" "llo"))
+(check-equal? (textbox-left (create-TextBox "abc" "def")) (create-TextBox "ab" "cdef"))
 
 
 ;; textbox-right: TextBox -> TextBox
@@ -122,7 +122,7 @@
   (create-TextBox (string-append pre (substring post 0 (first-index post)))
                   (substring post (first-index post))))
 ;; example
-(check-equal? (textbox-right (create-TextBox "hel" "lo")) (create-TextBox "hell" "o"))
+(check-equal? (textbox-right (create-TextBox "abc" "def")) (create-TextBox "abcd" "ef"))
 
 
 ;; remove-char : TextBox -> TextBox
@@ -131,9 +131,9 @@
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (create-TextBox pre (substring post (first-index post))))
-
 ;; Example
-(check-equal? (remove-char (create-TextBox "hel" "lo")) (create-TextBox "hel" "o"))
+(check-equal? (remove-char (create-TextBox "abc" "def")) (create-TextBox "abc" "ef"))
+
 
 ;; shift-char : TextBox -> TextBox
 ;; Moves the first character from `post` to `pre`.
@@ -144,9 +144,9 @@
       tb  ;; No characters to shift
       (create-TextBox (string-append pre (substring post 0 1))  ;; Move first char from post to pre
                       (substring post 1))))  ;; Remove first char from post
-
 ;; Example
-(check-equal? (shift-char (create-TextBox "hel" "lo")) (create-TextBox "hell" "o"))
+(check-equal? (shift-char (create-TextBox "abc" "def")) (create-TextBox "abcd" "ef"))
+
 
 
 ;; key-handler : TextBox String -> TextBox
