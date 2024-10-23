@@ -165,6 +165,15 @@
          (string=? key "\t"))  ;; "tab" key
      textbox]
 
+    ;; Handle the "backspace" key (remove character before the cursor)
+    [(or (string=? key "backspace")
+         (string=? key "\b"))  ;; Backspace as "\b"
+     (textbox-backspace textbox)]
+    
+    ;; Handle the "delete" key (remove character after the cursor)
+    [(string=? key "\u007F")
+     (textbox-delete textbox)]
+    
     ;; Move the cursor left (pop from pre to post)
     [(string=? key "left")
      (textbox-left textbox)]
@@ -172,14 +181,6 @@
     ;; Move the cursor right (pop from post to pre)
     [(string=? key "right")
      (textbox-right textbox)]
-    
-    ;; Backspace (remove character before the cursor)
-    [(string=? key "backspace")
-     (textbox-backspace textbox)]
-    
-    ;; Delete (remove character after the cursor)
-    [(string=? key "\u007F")
-     (textbox-delete textbox)]
     
     ;; Insert any other single character
     [(= (string-length key) 1)
