@@ -141,7 +141,7 @@
   (-> TextBox? TextBox?)
   (match-define (TextBox pre post) tb)
   (if (empty? post)
-      tb  ;; No characters to shift
+      tb 
       (create-TextBox (string-append pre (substring post 0 1))
                       (substring post 1)))) 
 ;; Example
